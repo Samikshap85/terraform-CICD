@@ -32,6 +32,7 @@ jobs:
           tag: ${{ github.event.release.tag_name }}
           fileName: terraform-artifact.zip
           out-file-path: ./artifact
+          extract: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
 
