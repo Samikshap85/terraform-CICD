@@ -166,7 +166,7 @@ jobs:
         working-directory: infrastructure/terraform-ec2
 
       - name: Terraform Plan EC2
-        run: terraform plan -no-color -out=tfplan.binary
+        run: terraform plan -no-color -out=tfplan-ec2.binary
         working-directory: infrastructure/terraform-ec2
 
       - name: Terraform Plan Show EC2
@@ -176,10 +176,15 @@ jobs:
       - name: Comment EC2 plan on PR
         id: plan_comment
         uses: GetTerminus/terraform-pr-commenter@v2
-        with:
+        env:
           github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          comment_type: info
-          comment_message_file: plan.txt
+        with:
+          comment_type: plan
+          commenter_input: |
+            {
+                "plan": "$(cat infrastructure/terraform-ec2/plan.txt)",
+                "exitcode": 0
+            }
 
       - name: Terraform Init S3
         run: terraform init -input=false
@@ -195,8 +200,9 @@ jobs:
 
       - name: Comment S3 Plan on PR
         uses: GetTerminus/terraform-pr-commenter@v2
+        env:
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
           comment_type: info
           comment_message_file: infrastructure/terraform-s3/plan-s3.txt
 
@@ -275,6 +281,7 @@ jobs:
 
       - name: Comment new tag on PR
         uses: mshick/add-pr-comment@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           body: "New release tag ${{ steps.calculate_version.outputs.new_version }} created and artifact uploaded."
