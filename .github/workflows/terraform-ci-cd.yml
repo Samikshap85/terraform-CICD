@@ -178,10 +178,11 @@ jobs:
         id: plan_comment
         uses: GetTerminus/terraform-pr-commenter@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          comment_type: info
-          comment_message_file: infrastructure/terraform-ec2/plan.txt
+          commenter_type: plan
+          commenter_input: infrastructure/terraform-ec2/plan.txt
+          commenter_exitcode: 0
 
 
       - name: Terraform Init S3
@@ -199,10 +200,11 @@ jobs:
       - name: Comment S3 Plan on PR
         uses: GetTerminus/terraform-pr-commenter@v2
         env:
-          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          comment_type: info
-          comment_message_file: infrastructure/terraform-s3/plan-s3.txt
+          commenter_type: plan
+          commenter_input: infrastructure/terraform-s3/plan-s3.txt
+          commenter_exitcode: 0
 
       - name: Upload EC2 and S3 plan artifacts
         uses: actions/upload-artifact@v4
