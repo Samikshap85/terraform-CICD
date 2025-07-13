@@ -178,7 +178,7 @@ jobs:
         id: plan_comment
         uses: GetTerminus/terraform-pr-commenter@v2
         env:
-        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
           commenter_type: plan
           commenter_input: infrastructure/terraform-ec2/plan.txt
