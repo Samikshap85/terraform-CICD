@@ -25,11 +25,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           role-session-name: terraform-deploy
 
-      - name: Download release artifact
-        uses: dawidd6/action-download-artifact@v2
+      - name: Download release asset from GitHub Release
+        uses: robinraju/release-downloader@v1.8
         with:
-          name: terraform-plans
-          path: ./artifact
+          repository: ${{ github.repository }}
+          tag: ${{ github.event.release.tag_name }}
+          fileName: terraform-artifact.zip
+          out-file-path: ./artifact
+          token: ${{ secrets.GITHUB_TOKEN }}
+
 
       - name: Extract artifact
         run: unzip ./artifact/terraform-artifact.zip -d ./terraform_code
