@@ -1,59 +1,59 @@
-name: Terraform CI/CD release
+# name: Terraform CI/CD release
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  build_artifact:
-    name: Build Artifact
-    runs-on: ubuntu-latest
-    needs: plan
-    if: ${{ needs.plan.result == 'success' }}
-    outputs:
-      new_release_tag: ${{ steps.tag_release.outputs.new_release_tag }}
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+# jobs:
+#   build_artifact:
+#     name: Build Artifact
+#     runs-on: ubuntu-latest
+#     needs: plan
+#     if: ${{ needs.plan.result == 'success' }}
+#     outputs:
+#       new_release_tag: ${{ steps.tag_release.outputs.new_release_tag }}
+#     steps:
+#       - name: Checkout repo
+#         uses: actions/checkout@v4
 
-      - name: Zip Terraform Files
-        run: |
-          zip -r terraform-artifact.zip .
-        working-directory: infrastructure
+#       - name: Zip Terraform Files
+#         run: |
+#           zip -r terraform-artifact.zip .
+#         working-directory: infrastructure
 
-      - name: Get latest git tag
-        id: get_latest_tag
-        run: |
-          echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+#       - name: Get latest git tag
+#         id: get_latest_tag
+#         run: |
+#           echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
 
-      - name: Calculate new version tag
-        id: calculate_version
-        run: |
-          # Simple semantic version bump example
-          latest=${{ steps.get_latest_tag.outputs.latest_tag }}
-          if [[ -z "$latest" ]]; then
-            echo "new_version=v0.1.0" >> $GITHUB_OUTPUT
-          else
-            IFS='.' read -r major minor patch <<< "${latest#v}"
-            patch=$((patch+1))
-            echo "new_version=v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
-          fi
+#       - name: Calculate new version tag
+#         id: calculate_version
+#         run: |
+#           # Simple semantic version bump example
+#           latest=${{ steps.get_latest_tag.outputs.latest_tag }}
+#           if [[ -z "$latest" ]]; then
+#             echo "new_version=v0.1.0" >> $GITHUB_OUTPUT
+#           else
+#             IFS='.' read -r major minor patch <<< "${latest#v}"
+#             patch=$((patch+1))
+#             echo "new_version=v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
+#           fi
 
-      - name: Create GitHub Release and Upload Artifact
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.calculate_version.outputs.new_version }}
-          name: Release ${{ steps.calculate_version.outputs.new_version }}
-          files: infrastructure/terraform-artifact.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+#       - name: Create GitHub Release and Upload Artifact
+#         uses: softprops/action-gh-release@v1
+#         with:
+#           tag_name: ${{ steps.calculate_version.outputs.new_version }}
+#           name: Release ${{ steps.calculate_version.outputs.new_version }}
+#           files: infrastructure/terraform-artifact.zip
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
     
-      - name: Comment new tag on PR
-        uses: mshick/add-pr-comment@v1
-        env:
-          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        with:
-          message: "New release tag ${{ steps.calculate_version.outputs.new_version }} created and artifact uploaded."
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          allow-repeats: false
+#       - name: Comment new tag on PR
+#         uses: mshick/add-pr-comment@v1
+#         env:
+#           github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+#         with:
+#           message: "New release tag ${{ steps.calculate_version.outputs.new_version }} created and artifact uploaded."
+#           repo-token: ${{ secrets.GITHUB_TOKEN }}
+#           allow-repeats: false
