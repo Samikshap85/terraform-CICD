@@ -13,7 +13,8 @@ data "terraform_remote_state" "ec2" {
 }
 
 resource "aws_s3_bucket" "samiksha_bucket" {
-  bucket        = var.bucket_name
+  bucket = var.bucket_name
+  # fake change for tfsec test
   force_destroy = true
   tags = {
     Name = "samiksha-s3-bucket-read-write-ec2"
