@@ -284,4 +284,6 @@ jobs:
         env:
           github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          body: "New release tag ${{ steps.calculate_version.outputs.new_version }} created and artifact uploaded."
+          message: "New release tag ${{ steps.calculate_version.outputs.new_version }} created and artifact uploaded."
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          allow-repeats: false
