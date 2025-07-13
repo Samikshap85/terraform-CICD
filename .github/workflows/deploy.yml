@@ -28,7 +28,7 @@ jobs:
       - name: Download release artifact
         uses: dawidd6/action-download-artifact@v2
         with:
-          name: terraform-artifact
+          name: terraform-plans
           path: ./artifact
 
       - name: Extract artifact
