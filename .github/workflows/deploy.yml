@@ -25,7 +25,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           role-session-name: terraform-deploy
 
-      - name: Download release asset from GitHub Release
+      - name: Download and extract release artifact
         uses: robinraju/release-downloader@v1.8
         with:
           repository: ${{ github.repository }}
@@ -34,6 +34,7 @@ jobs:
           out-file-path: ./artifact
           extract: true
           token: ${{ secrets.GITHUB_TOKEN }}
+
 
 
       - name: Extract artifact
