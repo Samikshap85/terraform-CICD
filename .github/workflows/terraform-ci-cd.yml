@@ -63,7 +63,7 @@ jobs:
         if: failure()
         uses: GetTerminus/terraform-pr-commenter@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           comment_type: error
           comment_message: |
             tflint failed. Please fix the errors before merging.
@@ -82,7 +82,7 @@ jobs:
         if: failure()
         uses: GetTerminus/terraform-pr-commenter@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           comment_type: error
           comment_message: |
             terraform fmt check failed. Please format your code.
@@ -96,7 +96,7 @@ jobs:
         if: failure()
         uses: GetTerminus/terraform-pr-commenter@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           comment_type: error
           comment_message: |
             terraform validate failed. Please fix the configuration.
@@ -135,7 +135,7 @@ jobs:
         id: tfsec_check
         uses: aquasecurity/tfsec-pr-commenter-action@v1.2.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
   plan:
     name: Terraform Plan
@@ -177,7 +177,7 @@ jobs:
         id: plan_comment
         uses: GetTerminus/terraform-pr-commenter@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           comment_type: info
           comment_message_file: plan.txt
 
