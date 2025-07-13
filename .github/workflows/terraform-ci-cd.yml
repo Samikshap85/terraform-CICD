@@ -242,26 +242,36 @@ jobs:
             echo "new_version=v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create GitHub Release and Tag
-        id: tag_release
-        uses: mathieudutour/github-tag-action@v6.2
+      - name: Create GitHub Release and Upload Artifact
+        uses: softprops/action-gh-release@v1
         with:
-          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          release_branches: main
-          custom_tag: ${{ steps.calculate_version.outputs.new_version }}
-          default_bump: patch
-          default_prerelease_bump: prerelease
-          create_annotated_tag: false
-          fetch_all_tags: false
-          dry_run: false
+          tag_name: ${{ steps.calculate_version.outputs.new_version }}
+          name: Release ${{ steps.calculate_version.outputs.new_version }}
+          files: infrastructure/terraform-artifact.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - name: Upload release artifact
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.tag_release.outputs.upload_url }}
-          asset_path: terraform-artifact.zip
-          asset_name: terraform-artifact.zip
-          asset_content_type: application/zip
+
+      # - name: Create GitHub Release and Tag
+      #   id: tag_release
+      #   uses: mathieudutour/github-tag-action@v6.2
+      #   with:
+      #     github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      #     release_branches: main
+      #     custom_tag: ${{ steps.calculate_version.outputs.new_version }}
+      #     default_bump: patch
+      #     default_prerelease_bump: prerelease
+      #     create_annotated_tag: false
+      #     fetch_all_tags: false
+      #     dry_run: false
+
+      # - name: Upload release artifact
+      #   uses: actions/upload-release-asset@v1
+      #   with:
+      #     upload_url: ${{ steps.tag_release.outputs.upload_url }}
+      #     asset_path: terraform-artifact.zip
+      #     asset_name: terraform-artifact.zip
+      #     asset_content_type: application/zip
 
       - name: Comment new tag on PR
         uses: mshick/add-pr-comment@v1
