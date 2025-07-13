@@ -217,7 +217,7 @@ jobs:
       - name: Upload EC2 and S3 plan artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-artifact
+          name: terraform-plans
           path: |
             infrastructure/terraform-ec2/tfplan-ec2.binary
             infrastructure/terraform-s3/tfplan-s3.binary
