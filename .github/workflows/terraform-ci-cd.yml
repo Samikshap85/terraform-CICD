@@ -175,14 +175,19 @@ jobs:
 
 
       - name: Comment EC2 plan on PR
-        id: plan_comment
-        uses: GetTerminus/terraform-pr-commenter@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        uses: actions/github-script@v7
         with:
-          commenter_type: plan
-          commenter_input: infrastructure/terraform-ec2/plan.txt
-          commenter_exitcode: 0
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('infrastructure/terraform-ec2/plan.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan Output for \`terraform-ec2\`
+              \n\n\`\`\`hcl\n${plan}\n\`\`\``
+              });
 
 
       - name: Terraform Init S3
@@ -198,13 +203,19 @@ jobs:
         working-directory: infrastructure/terraform-s3
 
       - name: Comment S3 Plan on PR
-        uses: GetTerminus/terraform-pr-commenter@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        uses: actions/github-script@v7
         with:
-          commenter_type: plan
-          commenter_input: infrastructure/terraform-s3/plan-s3.txt
-          commenter_exitcode: 0
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('infrastructure/terraform-s3/plan-s3.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Terraform Plan Output for \`terraform-s3\`
+              \n\n\`\`\`hcl\n${plan}\n\`\`\``
+              });
 
       - name: Upload EC2 and S3 plan artifacts
         uses: actions/upload-artifact@v4
