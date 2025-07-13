@@ -161,19 +161,19 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Terraform Init
+      - name: Terraform Init EC2
         run: terraform init -input=false
-        working-directory: infrastructure
+        working-directory: infrastructure/terraform-ec2
 
-      - name: Terraform Plan
+      - name: Terraform Plan EC2
         run: terraform plan -no-color -out=tfplan.binary
-        working-directory: infrastructure
+        working-directory: infrastructure/terraform-ec2
 
-      - name: Terraform Plan Show
+      - name: Terraform Plan Show EC2
         run: terraform show -no-color tfplan.binary > plan.txt
-        working-directory: infrastructure
+        working-directory: infrastructure/terraform-ec2
 
-      - name: Comment terraform plan on PR
+      - name: Comment EC2 plan on PR
         id: plan_comment
         uses: GetTerminus/terraform-pr-commenter@v2
         with:
@@ -181,11 +181,32 @@ jobs:
           comment_type: info
           comment_message_file: plan.txt
 
-      - name: Upload plan artifact
+      - name: Terraform Init S3
+        run: terraform init -input=false
+        working-directory: infrastructure/terraform-s3
+
+      - name: Terraform Plan S3
+        run: terraform plan -no-color -out=tfplan-s3.binary
+        working-directory: infrastructure/terraform-s3
+
+      - name: Terraform Plan Show S3
+        run: terraform show -no-color tfplan-s3.binary > plan-s3.txt
+        working-directory: infrastructure/terraform-s3
+
+      - name: Comment S3 Plan on PR
+        uses: GetTerminus/terraform-pr-commenter@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          comment_type: info
+          comment_message_file: infrastructure/terraform-s3/plan-s3.txt
+
+      - name: Upload EC2 and S3 plan artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-plan
-          path: tfplan.binary
+          name: terraform-plans
+          path: |
+            infrastructure/terraform-ec2/tfplan-ec2.binary
+            infrastructure/terraform-s3/tfplan-s3.binary
 
   build_artifact:
     name: Build Artifact
