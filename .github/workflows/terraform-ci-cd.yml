@@ -244,7 +244,7 @@ jobs:
 
       - name: Create GitHub Release and Tag
         id: tag_release
-        uses: mathieudutour/github-tag-action@v6
+        uses: mathieudutour/github-tag-action@v6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           tag_prefix: ""
