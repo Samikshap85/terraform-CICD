@@ -5,7 +5,8 @@ on:
     branches:
       - main
 
-build_artifact:
+jobs:
+  build_artifact:
     name: Build Artifact
     runs-on: ubuntu-latest
     needs: plan
@@ -47,3 +48,12 @@ build_artifact:
           files: infrastructure/terraform-artifact.zip
         env:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    
+      - name: Comment new tag on PR
+        uses: mshick/add-pr-comment@v1
+        env:
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        with:
+          message: "New release tag ${{ steps.calculate_version.outputs.new_version }} created and artifact uploaded."
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          allow-repeats: false
