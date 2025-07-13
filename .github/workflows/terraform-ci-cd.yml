@@ -36,8 +36,6 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          
-          role-session-name: terraform-lint
 
       - name: Setup Terraform CLI
         uses: hashicorp/setup-terraform@v2
@@ -73,11 +71,6 @@ jobs:
       - name: Auto-format Terraform files
         run: terraform fmt -recursive
         working-directory: infrastructure
-
-      # - name: Terraform fmt check
-      #   id: fmt_check
-      #   run: terraform fmt -check -recursive
-      #   working-directory: infrastructure
 
       - name: Terraform fmt check
         id: fmt_check
@@ -126,8 +119,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          role-session-name: terraform-security-scan
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
 
       - name: Setup Terraform CLI
         uses: hashicorp/setup-terraform@v2
@@ -140,7 +133,7 @@ jobs:
 
       - name: Run tfsec scan and comment results on PR
         id: tfsec_check
-        uses: aquasecurity/tfsec-pr-commenter-action@v1
+        uses: aquasecurity/tfsec-pr-commenter-action@v1.2.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -159,7 +152,8 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           role-session-name: terraform-plan
 
       - name: Setup Terraform CLI
