@@ -237,6 +237,13 @@ jobs:
         run: |
           zip -r terraform-artifact.zip .
         working-directory: infrastructure
+      
+
+      - name: Upload Terraform Artifact for CI/CD
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-artifact
+          path: infrastructure/terraform-artifact.zip
 
       - name: Get latest git tag
         id: get_latest_tag
