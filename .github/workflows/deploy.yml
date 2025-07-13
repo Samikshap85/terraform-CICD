@@ -1,0 +1,51 @@
+name: Deploy Terraform
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+env:
+  TERRAFORM_VERSION: 1.5.6
+  AWS_REGION: us-east-1
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: terraform-deploy
+
+      - name: Download release artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          name: terraform-artifact
+          path: ./artifact
+
+      - name: Extract artifact
+        run: unzip ./artifact/terraform-artifact.zip -d ./terraform_code
+
+      - name: Setup Terraform CLI
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        working-directory: ./terraform_code
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        working-directory: ./terraform_code
+        run: terraform plan
+
+      - name: Terraform Apply
+        working-directory: ./terraform_code
+        run: terraform apply -auto-approve
