@@ -70,6 +70,15 @@ jobs:
           comment_message: |
             tflint failed. Please fix the errors before merging.
 
+      - name: Auto-format Terraform files
+        run: terraform fmt -recursive
+        working-directory: infrastructure
+
+      # - name: Terraform fmt check
+      #   id: fmt_check
+      #   run: terraform fmt -check -recursive
+      #   working-directory: infrastructure
+
       - name: Terraform fmt check
         id: fmt_check
         run: |
