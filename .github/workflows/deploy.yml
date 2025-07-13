@@ -31,14 +31,14 @@ jobs:
           repository: ${{ github.repository }}
           tag: ${{ github.event.release.tag_name }}
           fileName: terraform-artifact.zip
-          out-file-path: ./artifact
+          out-file-path: ./terraform_code 
           extract: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
 
 
-      - name: Extract artifact
-        run: unzip ./artifact/terraform-artifact.zip -d ./terraform_code
+      # - name: Extract artifact
+      #   run: unzip ./artifact/terraform-artifact.zip -d ./terraform_code
 
       - name: Setup Terraform CLI
         uses: hashicorp/setup-terraform@v2
