@@ -128,11 +128,19 @@ jobs:
         run: terraform init -input=false
         working-directory: infrastructure
 
-      - name: Run tfsec scan and comment results on PR
-        id: tfsec_check
-        uses: aquasecurity/tfsec-pr-commenter-action@v1.2.0
+      # - name: Run tfsec scan and comment results on PR
+      #   id: tfsec_check
+      #   uses: aquasecurity/tfsec-pr-commenter-action@v1.2.0
+      #   with:
+      #     github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Run tfsec via reviewdog
+        uses: reviewdog/action-tfsec@v1
         with:
-          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review        
+          filter_mode: nofilter              
+          fail_on_error: false
 
   plan:
     name: Terraform Plan
