@@ -22,6 +22,35 @@ permissions:
 
 jobs:
 
+  #------------#
+
+  determine_bump_type:
+    name: Determine Version Bump Type
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.base.ref == 'dev'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set bump type based on source branch
+        run: |
+          head_branch="${{ github.head_ref }}"
+          bump_type="patch"
+          if [[ "$head_branch" == *"major"* ]]; then
+            bump_type="major"
+          elif [[ "$head_branch" == *"minor"* ]]; then
+            bump_type="minor"
+          fi
+          echo "$bump_type" > .version-bump
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .version-bump
+          git commit -m "ci: set version bump type [$bump_type]"
+          git push
+
+
+  #-------------#
+
   lint:
     name: Lint (terraform fmt, validate, tflint)
     runs-on: ubuntu-latest
@@ -225,6 +254,8 @@ jobs:
           path: |
             infrastructure/terraform-ec2/tfplan-ec2.binary
             infrastructure/terraform-s3/tfplan-s3.binary
+      
+
 
   build_artifact:
     name: Build Artifact
@@ -232,8 +263,8 @@ jobs:
     # needs: plan
     # if: ${{ needs.plan.result == 'success' }}
     #
-    outputs:
-      new_release_tag: ${{ steps.tag_release.outputs.new_release_tag }}
+    # outputs:
+    #   new_release_tag: ${{ steps.tag_release.outputs.new_release_tag }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -243,7 +274,6 @@ jobs:
           zip -r terraform-artifact.zip .
         working-directory: infrastructure
       
-
       - name: Upload Terraform build Artifact for CI/CD
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
@@ -251,37 +281,83 @@ jobs:
           name: terraform-artifact
           path: infrastructure/terraform-artifact.zip
 
-      # This step gets the source branch of the PR
+      # - name: Get latest version
+      #   id: latest_version
+      #   run: |
+      #     branch="${{ github.head_ref || github.ref_name }}"
+      #     latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || echo "")
+      #     echo "latest_version=${latest_tag:-v1.0.0}" >> $GITHUB_OUTPUT
+
+      # - name: Determine version bump
+      #   id: calculate_version
+      #   run: |
+      #     latest_version="${{ steps.latest_version.outputs.latest_version }}"
+      #     branch="${{ github.head_ref || github.ref_name }}"
+      #     bump_type="patch"
+
+      #       git fetch origin dev || true
+      #       git log --pretty=%s origin/dev --grep='Merge pull request' > merge_commits.txt || echo "" > merge_commits.txt
+      #       if grep -qE 'from .*/major' merge_commits.txt; then
+      #         bump_type="major"
+      #       elif grep -qE 'from .*/minor' merge_commits.txt; then
+      #         bump_type="minor"
+      #       else
+      #         bump_type="patch"
+      #       fi
+
+      #     if [[ "$latest_version" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+      #       major=${BASH_REMATCH[1]}
+      #       minor=${BASH_REMATCH[2]}
+      #       patch=${BASH_REMATCH[3]}
+      #     else
+      #       major=1
+      #       minor=0
+      #       patch=0
+      #     fi
+          
+          
+      #     if [[ "$bump_type" == "major" ]]; then
+      #       major=$((major + 1)) || { echo "ERROR: Failed to increment major version" >&2; exit 1; }
+      #       minor=0
+      #       patch=0
+      #     elif [[ "$bump_type" == "minor" ]]; then
+      #       minor=$((minor + 1)) || { echo "ERROR: Failed to increment minor version" >&2; exit 1; }
+      #       patch=0
+      #     else
+      #       patch=$((patch + 1)) || { echo "ERROR: Failed to increment patch version" >&2; exit 1; }
+      #     fi
+          
+      #     new_version="v${major}.${minor}.${patch}"
+          
+      #     if ! touch "$GITHUB_OUTPUT" 2>/dev/null; then
+      #       echo "ERROR: Cannot write to $GITHUB_OUTPUT" >&2
+      #       exit 1
+      #     fi
+          
+      #     echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
+      #     echo "bump_type=$bump_type" >> "$GITHUB_OUTPUT"
+      #   shell: bash
+
+
+
+      #---------------------#
 
       - name: Get latest version
         id: latest_version
         run: |
-          branch="${{ github.head_ref || github.ref_name }}"
-          latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || echo "")
-          echo "latest_version=${latest_tag:-v1.0.0}" >> $GITHUB_OUTPUT
+          git fetch --tags
+          latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          echo "latest_version=${latest_tag:-v1.0.0}" >> "$GITHUB_OUTPUT"
 
-        shell: bash
-
-      - name: Determine version bump
+      - name: Determine version bump type and calculate next version
         id: calculate_version
         run: |
           latest_version="${{ steps.latest_version.outputs.latest_version }}"
-          branch="${{ github.head_ref || github.ref_name }}"
-          
-
           bump_type="patch"
-          
 
-            git fetch origin dev || true
-            git log --pretty=%s origin/dev --grep='Merge pull request' > merge_commits.txt || echo "" > merge_commits.txt
-            if grep -qE 'from .*/major' merge_commits.txt; then
-              bump_type="major"
-            elif grep -qE 'from .*/minor' merge_commits.txt; then
-              bump_type="minor"
-            else
-              bump_type="patch"
-            fi
-          
+          if [ -f ".version-bump" ]; then
+            bump_type=$(cat .version-bump)
+          fi
 
           if [[ "$latest_version" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             major=${BASH_REMATCH[1]}
@@ -292,29 +368,23 @@ jobs:
             minor=0
             patch=0
           fi
-          
-          
+
           if [[ "$bump_type" == "major" ]]; then
-            major=$((major + 1)) || { echo "ERROR: Failed to increment major version" >&2; exit 1; }
+            major=$((major + 1))
             minor=0
             patch=0
           elif [[ "$bump_type" == "minor" ]]; then
-            minor=$((minor + 1)) || { echo "ERROR: Failed to increment minor version" >&2; exit 1; }
+            minor=$((minor + 1))
             patch=0
           else
-            patch=$((patch + 1)) || { echo "ERROR: Failed to increment patch version" >&2; exit 1; }
+            patch=$((patch + 1))
           fi
-          
+
           new_version="v${major}.${minor}.${patch}"
-          
-          if ! touch "$GITHUB_OUTPUT" 2>/dev/null; then
-            echo "ERROR: Cannot write to $GITHUB_OUTPUT" >&2
-            exit 1
-          fi
-          
           echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
-          echo "bump_type=$bump_type" >> "$GITHUB_OUTPUT"
         shell: bash
+
+      #---------------#
 
       - name: Create GitHub Release and Upload Artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
