@@ -33,6 +33,7 @@ jobs:
           fileName: terraform-artifact.zip
           out-file-path: ./terraform_code
           extract: true
+          latest: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Terraform CLI
