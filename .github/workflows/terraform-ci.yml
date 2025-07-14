@@ -48,6 +48,11 @@ jobs:
           git config user.email "github-actions@github.com"
           git add .version-bump
           git commit -m "ci: set version bump type [$bump_type]"
+      - name: Debug PAT visibility
+        run: |
+        echo "PAT length: ${#PERSONAL_ACCESS_TOKEN}"
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       - name: Push .version-bump with PAT
         run: |
           git remote set-url origin https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${{ github.repository }}
