@@ -31,28 +31,35 @@ jobs:
           repository: ${{ github.repository }}
           tag: ${{ github.event.release.tag_name }}
           fileName: terraform-artifact.zip
-          out-file-path: ./terraform_code 
+          out-file-path: ./terraform_code
           extract: true
           token: ${{ secrets.GITHUB_TOKEN }}
-
-
-
-      # - name: Extract artifact
-      #   run: unzip ./artifact/terraform-artifact.zip -d ./terraform_code
 
       - name: Setup Terraform CLI
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Terraform Init
-        working-directory: ./terraform_code
+      - name: Terraform Init - EC2
+        working-directory: terraform_code/infrastructure/terraform-ec2
         run: terraform init -input=false
 
-      - name: Terraform Plan
-        working-directory: ./terraform_code
-        run: terraform plan
+      - name: Terraform Init - S3
+        working-directory: terraform_code/infrastructure/terraform-s3
+        run: terraform init -input=false
 
-      - name: Terraform Apply
-        working-directory: ./terraform_code
-        run: terraform apply -auto-approve
+      - name: Terraform Plan - EC2
+        working-directory: terraform_code/infrastructure/terraform-ec2
+        run: terraform plan -out=tfplan-ec2.binary
+
+      - name: Terraform Plan - S3
+        working-directory: terraform_code/infrastructure/terraform-s3
+        run: terraform plan -out=tfplan-s3.binary
+
+      - name: Terraform Apply - EC2
+        working-directory: terraform_code/infrastructure/terraform-ec2
+        run: terraform apply -auto-approve tfplan-ec2.binary
+
+      - name: Terraform Apply - S3
+        working-directory: terraform_code/infrastructure/terraform-s3
+        run: terraform apply -auto-approve tfplan-s3.binary
