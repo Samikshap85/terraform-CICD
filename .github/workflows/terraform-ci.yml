@@ -263,7 +263,7 @@ jobs:
         shell: bash
 
       - name: Determine version bump
-        id: version_bump
+        id: calculate_version
         run: |
           latest_version="${{ steps.latest_version.outputs.latest_version }}"
           branch="${{ github.head_ref || github.ref_name }}"
@@ -315,7 +315,7 @@ jobs:
           echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
           echo "bump_type=$bump_type" >> "$GITHUB_OUTPUT"
         shell: bash
-        
+
       - name: Create GitHub Release and Upload Artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v1
