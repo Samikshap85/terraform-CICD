@@ -170,7 +170,6 @@ jobs:
       - name: Terraform Plan EC2
         run: terraform plan -no-color -out=tfplan-ec2.binary
         working-directory: infrastructure/terraform-ec2
-
       - name: Terraform Plan Show EC2
         run: terraform show -no-color tfplan-ec2.binary > plan.txt
         working-directory: infrastructure/terraform-ec2
@@ -230,9 +229,9 @@ jobs:
   build_artifact:
     name: Build Artifact
     runs-on: ubuntu-latest
-    needs: plan
-    if: ${{ needs.plan.result == 'success' }}
-    
+    # needs: plan
+    # if: ${{ needs.plan.result == 'success' }}
+    #
     outputs:
       new_release_tag: ${{ steps.tag_release.outputs.new_release_tag }}
     steps:
@@ -253,9 +252,6 @@ jobs:
           path: infrastructure/terraform-artifact.zip
 
       # This step gets the source branch of the PR
-
-      - name: Fetch all git tags
-        run: git fetch --tags
 
       - name: Get latest version
         id: latest_version
