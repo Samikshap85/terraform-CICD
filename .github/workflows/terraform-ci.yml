@@ -29,9 +29,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.base.ref == 'dev'
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-      
       - name: Checkout correct branch
         uses: actions/checkout@v4
         with:
