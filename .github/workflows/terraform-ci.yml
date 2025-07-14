@@ -257,22 +257,36 @@ jobs:
         id: determine_bump
         if: github.ref == 'refs/heads/main'
         run: |
-          git fetch --all --tags --prune
-          # Find the common ancestor between dev and main
+          #!/usr/bin/bash -e
+
+          git fetch --all --tags --prune || { echo "Error: Failed to fetch git data"; exit 1; }
+
+          if ! git rev-parse --verify origin/main >/dev/null 2>&1; then
+            echo "Error: origin/main does not exist"
+            exit 1
+          fi
+          if ! git rev-parse --verify origin/dev >/dev/null 2>&1; then
+            echo "Error: origin/dev does not exist"
+            exit 1
+          fi
+
           base=$(git merge-base origin/main origin/dev)
-          
+          if [ -z "$base" ]; then
+            echo "Error: No common ancestor found between origin/main and origin/dev"
+            exit 1
+          fi
+
           echo "Comparing from base: $base"
-          
-          # List all merged PRs into dev since last common ancestor with main
-          merged_branches=$(git log $base..origin/dev --merges --pretty=format:'%s' | \
-            grep -oE 'Merge pull request #[0-9]+ from [^/]+/[^ ]+' | awk '{print $NF}' | awk -F'/' '{print $NF}')
-          
+
+          merged_branches=$(git log "$base..origin/dev" --merges --pretty=format:'%s' | \
+            grep -oE 'Merge pull request #[0-9]+ from [^/]+/[^ ]+' | awk '{print $NF}' | awk -F'/' '{print $NF}' || true)
+
           echo "Merged branches into dev:"
           echo "$merged_branches"
-          
-          bump_type="patch"  # default
-          
-          while read branch; do
+
+          bump_type="patch"
+
+          while read -r branch; do
             if [[ "$branch" == major* ]]; then
               bump_type="major"
               break
@@ -281,8 +295,12 @@ jobs:
             fi
           done <<< "$merged_branches"
 
-          echo "bump_type=$bump_type" >> $GITHUB_OUTPUT
-
+          echo "bump_type=$bump_type" >> "$GITHUB_OUTPUT"
+        shell: bash
+        env:
+          TERRAFORM_VERSION: 1.5.6
+          TFLINT_VERSION: v0.48.0
+          AWS_REGION: us-east-1
 
       - name: Calculate new version tag
         id: calculate_version
