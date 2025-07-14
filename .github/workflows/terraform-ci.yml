@@ -267,26 +267,44 @@ jobs:
 
       # This step gets the source branch of the PR
 
-      - name: Determine bump type from PR source branch
+      - name: Determine bump type from dev branch history
         id: determine_bump
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         run: |
-          branch="${{ github.event.pull_request.head.ref }}"
-          echo "PR source branch: $branch"
-          if [[ "$branch" == "major" ]]; then
-            echo "bump_type=major" >> $GITHUB_OUTPUT
-          elif [[ "$branch" == "minor" ]]; then
-            echo "bump_type=minor" >> $GITHUB_OUTPUT
-          else
-            echo "bump_type=patch" >> $GITHUB_OUTPUT
-          fi
+          git fetch --all --tags --prune
+          # Find the common ancestor between dev and main
+          base=$(git merge-base origin/main origin/dev)
+          
+          echo "Comparing from base: $base"
+          
+          # List all merged PRs into dev since last common ancestor with main
+          merged_branches=$(git log $base..origin/dev --merges --pretty=format:'%s' | \
+            grep -oE 'Merge pull request #[0-9]+ from [^/]+/[^ ]+' | awk '{print $NF}' | awk -F'/' '{print $NF}')
+          
+          echo "Merged branches into dev:"
+          echo "$merged_branches"
+          
+          bump_type="patch"  # default
+          
+          while read branch; do
+            if [[ "$branch" == major* ]]; then
+              bump_type="major"
+              break
+            elif [[ "$branch" == minor* && "$bump_type" != "major" ]]; then
+              bump_type="minor"
+            fi
+          done <<< "$merged_branches"
+
+          echo "bump_type=$bump_type" >> $GITHUB_OUTPUT
+
 
       - name: Calculate new version tag
         id: calculate_version
         run: |
           latest=${{ steps.get_latest_tag.outputs.latest_tag }}
           bump_type=${{ steps.determine_bump.outputs.bump_type }}
-          
+          echo "Latest tag: $latest"
+          echo "Bump type: $bump_type"
           if [[ -z "$latest" ]]; then
             echo "new_version=v0.1.0" >> $GITHUB_OUTPUT
           else
