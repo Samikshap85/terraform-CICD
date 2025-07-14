@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - dev
 
 env:
   TERRAFORM_VERSION: 1.5.6
@@ -134,13 +135,20 @@ jobs:
       #   with:
       #     github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - name: Run tfsec via reviewdog
-        uses: reviewdog/action-tfsec@v1
+      # - name: Run tfsec via reviewdog
+      #   uses: reviewdog/action-tfsec@v1
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     reporter: github-pr-review        
+      #     filter_mode: nofilter              
+      #     fail_on_error: false
+      
+      - name: Check using tfsec and comment Results on PR
+        id: tfsec
+        uses: tfsec/tfsec-pr-commenter-action@v1.3.1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review        
-          filter_mode: nofilter              
-          fail_on_error: false
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          working_directory: infrastructure
 
   plan:
     name: Terraform Plan
@@ -247,31 +255,79 @@ jobs:
         working-directory: infrastructure
       
 
-      - name: Upload Terraform Artifact for CI/CD
+      - name: Upload Terraform build Artifact for CI/CD
+        if: github.event_name == 'pull_request' && github.base_ref == ('main' || 'dev') 
         uses: actions/upload-artifact@v4
         with:
           name: terraform-artifact
           path: infrastructure/terraform-artifact.zip
 
-      - name: Get latest git tag
-        id: get_latest_tag
+      # This step gets the source branch of the PR
+
+      - name: Determine bump type from PR source branch
+        id: determine_bump
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+          branch="${{ github.event.pull_request.head.ref }}"
+          echo "PR source branch: $branch"
+          if [[ "$branch" == "major" ]]; then
+            echo "bump_type=major" >> $GITHUB_OUTPUT
+          elif [[ "$branch" == "minor" ]]; then
+            echo "bump_type=minor" >> $GITHUB_OUTPUT
+          else
+            echo "bump_type=patch" >> $GITHUB_OUTPUT
+          fi
 
       - name: Calculate new version tag
         id: calculate_version
         run: |
-          # Simple semantic version bump example
           latest=${{ steps.get_latest_tag.outputs.latest_tag }}
+          bump_type=${{ steps.determine_bump.outputs.bump_type }}
+          
           if [[ -z "$latest" ]]; then
             echo "new_version=v0.1.0" >> $GITHUB_OUTPUT
           else
             IFS='.' read -r major minor patch <<< "${latest#v}"
-            patch=$((patch+1))
+
+            case "$bump_type" in
+              major)
+                major=$((major+1))
+                minor=0
+                patch=0
+                ;;
+              minor)
+                minor=$((minor+1))
+                patch=0
+                ;;
+              patch|*)
+                patch=$((patch+1))
+                ;;
+            esac
+
             echo "new_version=v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
           fi
 
+
+      # - name: Get latest git tag
+      #   id: get_latest_tag
+      #   run: |
+      #     echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+
+      # - name: Calculate new version tag
+      #   id: calculate_version
+      #   run: |
+      #     # semantic version bump
+      #     latest=${{ steps.get_latest_tag.outputs.latest_tag }}
+      #     if [[ -z "$latest" ]]; then
+      #       echo "new_version=v0.1.0" >> $GITHUB_OUTPUT
+      #     else
+      #       IFS='.' read -r major minor patch <<< "${latest#v}"
+      #       patch=$((patch+1))
+      #       echo "new_version=v${major}.${minor}.${patch}" >> $GITHUB_OUTPUT
+      #     fi
+
       - name: Create GitHub Release and Upload Artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.calculate_version.outputs.new_version }}
