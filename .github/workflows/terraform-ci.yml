@@ -256,7 +256,7 @@ jobs:
       
 
       - name: Upload Terraform build Artifact for CI/CD
-        if: github.event_name == 'pull_request' && github.base_ref == ('main' || 'dev') 
+        if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: terraform-artifact
