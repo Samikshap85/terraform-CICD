@@ -61,8 +61,9 @@ jobs:
 
       - name: Terraform Apply - EC2
         working-directory: terraform_code/terraform-ec2
-        run: terraform apply -auto-approve tfplan-ec2.binary
+        run: terraform apply -auto-approve
+
 
       - name: Terraform Apply - S3
         working-directory: terraform_code/terraform-s3
-        run: terraform apply -auto-approve tfplan-s3.binary
+        run: terraform apply -auto-approve
