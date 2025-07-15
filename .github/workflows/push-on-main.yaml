@@ -21,9 +21,6 @@ jobs:
   build_artifact:
     name: Build Artifact
     runs-on: ubuntu-latest
- 
- 
-  
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -34,13 +31,10 @@ jobs:
         working-directory: infrastructure
       
       - name: Upload Terraform build Artifact for CI/CD
-   
         uses: actions/upload-artifact@v4
         with:
           name: terraform-artifact
           path: infrastructure/terraform-artifact.zip
-
-      
 
       - name: Get latest version
         id: latest_version
@@ -83,8 +77,6 @@ jobs:
           new_version="v${major}.${minor}.${patch}"
           echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
         shell: bash
-
- 
 
       - name: Create GitHub Release and Upload Artifact
         uses: softprops/action-gh-release@v1
