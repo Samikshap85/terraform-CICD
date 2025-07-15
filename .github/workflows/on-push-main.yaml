@@ -35,47 +35,47 @@ jobs:
           name: terraform-artifact
           path: infrastructure/terraform-artifact.zip
 
-      # - name: Get latest version
-      #   id: latest_version
-      #   run: |
-      #     git fetch --tags
-      #     latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
-      #     echo "latest_version=${latest_tag:-v1.0.0}" >> "$GITHUB_OUTPUT"
+      - name: Get latest version
+        id: latest_version
+        run: |
+          git fetch --tags
+          latest_tag=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          echo "latest_version=${latest_tag:-v1.0.0}" >> "$GITHUB_OUTPUT"
 
-      # - name: calculate next version
-      #   id: calculate_version
-      #   run: |
-      #     latest_version="${{ steps.latest_version.outputs.latest_version }}"
-      #     bump_type="patch"
+      - name: calculate next version
+        id: calculate_version
+        run: |
+          latest_version="${{ steps.latest_version.outputs.latest_version }}"
+          bump_type="patch"
 
-      #     if [ -f ".version-bump" ]; then
-      #       bump_type=$(cat .version-bump)
-      #     fi
+          if [ -f ".version-bump" ]; then
+            bump_type=$(cat .version-bump)
+          fi
 
-      #     if [[ "$latest_version" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-      #       major=${BASH_REMATCH[1]}
-      #       minor=${BASH_REMATCH[2]}
-      #       patch=${BASH_REMATCH[3]}
-      #     else
-      #       major=1
-      #       minor=0
-      #       patch=0
-      #     fi
+          if [[ "$latest_version" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            major=${BASH_REMATCH[1]}
+            minor=${BASH_REMATCH[2]}
+            patch=${BASH_REMATCH[3]}
+          else
+            major=1
+            minor=0
+            patch=0
+          fi
 
-      #     if [[ "$bump_type" == "major" ]]; then
-      #       major=$((major + 1))
-      #       minor=0
-      #       patch=0
-      #     elif [[ "$bump_type" == "minor" ]]; then
-      #       minor=$((minor + 1))
-      #       patch=0
-      #     else
-      #       patch=$((patch + 1))
-      #     fi
+          if [[ "$bump_type" == "major" ]]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [[ "$bump_type" == "minor" ]]; then
+            minor=$((minor + 1))
+            patch=0
+          else
+            patch=$((patch + 1))
+          fi
 
-      #     new_version="v${major}.${minor}.${patch}"
-      #     echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
-      #   shell: bash
+          new_version="v${major}.${minor}.${patch}"
+          echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
+        shell: bash
 
       - name: Create GitHub Release and Upload Artifact
         uses: softprops/action-gh-release@v1
