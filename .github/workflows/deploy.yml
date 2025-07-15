@@ -2,15 +2,11 @@ name: Deploy Terraform
 
 on:
   workflow_dispatch:
-  release:
-    types: [published]
 
 env:
   TERRAFORM_VERSION: 1.5.6
+  TFLINT_VERSION: v0.48.0
   AWS_REGION: us-east-1
-
-permissions:
-  contents: read
 
 jobs:
   deploy:
@@ -48,14 +44,6 @@ jobs:
       - name: Terraform Init - S3
         working-directory: terraform_code/infrastructure/terraform-s3
         run: terraform init -input=false
-
-      - name: Terraform Plan - EC2
-        working-directory: terraform_code/infrastructure/terraform-ec2
-        run: terraform plan -out=tfplan-ec2.binary
-
-      - name: Terraform Plan - S3
-        working-directory: terraform_code/infrastructure/terraform-s3
-        run: terraform plan -out=tfplan-s3.binary
 
       - name: Terraform Apply - EC2
         working-directory: terraform_code/infrastructure/terraform-ec2
