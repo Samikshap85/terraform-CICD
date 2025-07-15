@@ -2,6 +2,20 @@ name: Deploy Terraform
 
 on:
   workflow_dispatch:
+    inputs:
+      project:
+        description: "Select project to deploy"
+        required: true
+        default: "ec2"
+        type: choice
+        options:
+          - ec2
+          - s3
+
+      tag:
+        description: "Enter release tag"
+        required: false
+        default: "latest"
 
 env:
   TERRAFORM_VERSION: 1.5.6
