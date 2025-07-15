@@ -52,17 +52,17 @@ jobs:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Terraform Init - EC2
-        working-directory: infrastructure/terraform-ec2
+        working-directory: terraform_code/terraform-ec2
         run: terraform init -input=false
 
       - name: Terraform Init - S3
-        working-directory: infrastructure/terraform-s3
+        working-directory: terraform_code/terraform-s3
         run: terraform init -input=false
 
       - name: Terraform Apply - EC2
-        working-directory: infrastructure/terraform-ec2
+        working-directory: terraform_code/terraform-ec2
         run: terraform apply -auto-approve tfplan-ec2.binary
 
       - name: Terraform Apply - S3
-        working-directory: infrastructure/terraform-s3
+        working-directory: terraform_code/terraform-s3
         run: terraform apply -auto-approve tfplan-s3.binary
